@@ -1,11 +1,16 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useContext } from "react";
+import AuthContext from "../../store/auth-context";
 import classes from "./AuthForm.module.css";
+import { useHistory } from "react-router-dom";
 
 const AuthForm = () => {
+  const history = useHistory();
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const emailInputRef = useRef();
   const passwordInputRef = useRef();
+
+  const authCtx = useContext(AuthContext);
 
   const switchAuthModeHandler = () => {
     setIsLogin((prevState) => !prevState);
@@ -48,13 +53,18 @@ const AuthForm = () => {
             // if (data && data.error && data.error.message) {
             //   errorMessage = data.error.message;
             // }
-            alert(errorMessage);
-            throw new Error(errorMessage)
+            throw new Error(errorMessage);
           });
         }
       })
       .then((data) => {
-        console.log(data.idToken)
+        const expirationTime = new Date(
+          new Date().getTime() + +data.expiresIn * 1000
+        );
+        authCtx.login(data.idToken, expirationTime.toISOString());
+        console.log(data.idToken);
+        // history.push('/') // 뒤로가기 가능
+        history.replace("/"); // 뒤로가기 불가능
       })
       .catch((error) => {
         alert(error.message);
